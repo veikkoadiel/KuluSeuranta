@@ -1,13 +1,17 @@
 package model;
 
+import java.time.LocalDate;
+
 public class Tapahtuma {
     private String nimi;
     private double summa;
+    private LocalDate paivamaara;
     private Kategoria kategoria;
 
-    public Tapahtuma(String nimi, double summa, Kategoria kategoria) {
+    public Tapahtuma(String nimi, double summa, LocalDate paivamaara, Kategoria kategoria) {
         this.nimi = nimi;
         this.summa = summa;
+        this.paivamaara = paivamaara;
         this.kategoria = kategoria;
     }
 
@@ -15,8 +19,24 @@ public class Tapahtuma {
         return nimi;
     }
 
+    public void setNimi(String nimi) {
+        this.nimi = nimi;
+    }
+
     public double getSumma() {
         return summa;
+    }
+
+    public void setSumma(double summa) {
+        this.summa = summa;
+    }
+
+    public LocalDate getPaivamaara() {
+        return paivamaara;
+    }
+
+    public void setPaivamaara(LocalDate paivamaara) {
+        this.paivamaara = paivamaara;
     }
 
     public Kategoria getKategoria() {
@@ -28,10 +48,15 @@ public class Tapahtuma {
     }
 
     public boolean onTulo() {
-        return getSumma() > 0;
+        return summa > 0;
     }
 
     public boolean onMeno() {
-        return getSumma() < 0;
+        return summa < 0;
+    }
+
+    @Override
+    public String toString() {
+        return nimi;
     }
 }

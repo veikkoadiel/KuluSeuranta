@@ -1,27 +1,127 @@
 package controller;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import model.Kategoria;
 
-import javafx.event.ActionEvent;
 import java.io.IOException;
 
 public class KategoriatController {
 
-    public void handleLisaaKategoria() {
-        IO.println("Lisätään...");
+    @FXML
+    private TextField kategoriaText;
+
+    @FXML
+    private TableView<Kategoria> kategoriaTable;
+
+    @FXML
+    private CheckBox valttamatonCheck;
+
+    @FXML
+    private TableColumn<Kategoria, String> kategoriaColumn;
+
+    private final ObservableList<Kategoria> kategoriat =
+            FXCollections.observableArrayList();
+
+    @FXML
+    public void initialize() {
+
+        kategoriaColumn.setCellValueFactory(cellData -> {
+            Kategoria kategoria = cellData.getValue();
+
+            String teksti = kategoria.getNimi();
+
+            if (kategoria.isValttamaton()) {
+                teksti += " *";
+            }
+
+            return new SimpleStringProperty(teksti);
+        });
+
+        kategoriaTable.setItems(kategoriat);
+
+        kategoriaTable.getSelectionModel().selectedItemProperty().addListener(
+                (observable, vanha, valittu) -> {
+
+                    if (valittu != null) {
+                        kategoriaText.setText(valittu.getNimi());
+                        valttamatonCheck.setSelected(valittu.isValttamaton());
+                    }
+                }
+        );
     }
 
+    @FXML
+    public void handleLisaaKategoria(ActionEvent event) {
+
+        String nimi = kategoriaText.getText();
+
+        if (nimi == null || nimi.isBlank()) {
+            IO.println("Kategorian nimi puuttuu");
+            return;
+        }
+
+        boolean valttamaton = valttamatonCheck.isSelected();
+
+        Kategoria uusi = new Kategoria(nimi, valttamaton);
+
+        kategoriat.add(uusi);
+
+        kategoriaText.clear();
+        valttamatonCheck.setSelected(false);
+
+        IO.println("Lisättiin kategoria: " + nimi);
+    }
+
+    @FXML
     public void handleMuokkaaKategoria() {
-        IO.println("Muokataan...");
+
+        Kategoria valittu = kategoriaTable.getSelectionModel().getSelectedItem();
+
+        if (valittu == null) {
+            IO.println("Valitse muokattava kategoria");
+            return;
+        }
+
+        String uusiNimi = kategoriaText.getText();
+
+        if (uusiNimi == null || uusiNimi.isBlank()) {
+            IO.println("Nimi puuttuu");
+            return;
+        }
+
+        valittu.setNimi(uusiNimi);
+        valittu.setValttamaton(valttamatonCheck.isSelected());
+
+        kategoriaTable.refresh();
+
+        IO.println("Kategoria muokattu");
     }
 
+    @FXML
     public void handlePoistaKategoria() {
-        IO.println("Poistetaan...");
+        Kategoria valittu = kategoriaTable.getSelectionModel().getSelectedItem();
+
+        if (valittu == null) {
+            IO.println("Valitse ensin poistettava kategoria");
+            return;
+        }
+
+        kategoriat.remove(valittu);
+
+        IO.println("Poistettiin kategoria: " + valittu.getNimi());
     }
 
+    @FXML
     public void handleTakaisin(ActionEvent event) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/TapahtumatView.fxml"));
         Scene scene = new Scene(loader.load());

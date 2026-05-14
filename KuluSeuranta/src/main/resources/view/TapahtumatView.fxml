@@ -7,6 +7,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -31,11 +32,21 @@
                   <Font size="14.0" />
                </font>
             </Label>
+            <TextField fx:id="nimiText" promptText="Nimi" />
+            <TextField fx:id="summaText" promptText="Summa" />
+            <DatePicker fx:id="pvmPicker" />
+            <ComboBox fx:id="lisaysKategoriaCombo" prefWidth="150.0" promptText="Kategoria" />
             <Button fx:id="lisaaTuloBtn" mnemonicParsing="false" onAction="#handleLisaaTulo" prefWidth="100.0" text="Lisää tulo" />
             <Button fx:id="lisaaMenoBtn" mnemonicParsing="false" onAction="#handleLisaaMeno" prefWidth="100.0" text="Lisää meno" />
-            <Button fx:id="muokkaaBtn" mnemonicParsing="false" onAction="#handleMuokkaa" prefWidth="100.0" text="Muokkaa" />
+            <Button fx:id="muokkaaBtn" mnemonicParsing="false" onAction="#handleMuokkaa" prefWidth="100.0" text="Muokkaa">
+               <VBox.margin>
+                  <Insets top="15.0" />
+               </VBox.margin></Button>
             <Button fx:id="poistaBtn" mnemonicParsing="false" onAction="#handlePoista" prefWidth="100.0" text="Poista" />
-            <Button fx:id="kategoriatBtn" mnemonicParsing="false" onAction="#handleKategoriat" prefWidth="100.0" text="Kategoriat" />
+            <Button fx:id="kategoriatBtn" mnemonicParsing="false" onAction="#handleKategoriat" prefWidth="100.0" text="Kategoriat">
+               <VBox.margin>
+                  <Insets top="15.0" />
+               </VBox.margin></Button>
          </children>
          <padding>
             <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />

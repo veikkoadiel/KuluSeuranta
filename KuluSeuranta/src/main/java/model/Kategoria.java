@@ -1,6 +1,7 @@
 package model;
 
 public class Kategoria {
+
     private String nimi;
     private boolean valttamaton;
 
@@ -13,8 +14,20 @@ public class Kategoria {
         return nimi;
     }
 
+    public void setNimi(String nimi) {
+        this.nimi = nimi;
+    }
+
+    public void setValttamaton(boolean valttamaton) {
+        this.valttamaton = valttamaton;
+    }
+
     public boolean isValttamaton() {
         return valttamaton;
     }
 
+    @Override
+    public String toString() {
+        return nimi;
+    }
 }
