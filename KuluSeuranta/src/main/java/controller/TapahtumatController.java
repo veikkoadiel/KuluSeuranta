@@ -1,8 +1,6 @@
 package controller;
 
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -10,13 +8,15 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
-import javax.swing.*;
 import javafx.event.ActionEvent;
 import model.Kategoria;
+import model.KategoriaKokoelma;
 import model.Tapahtuma;
+import model.TapahtumaKokoelma;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Optional;
 
 public class TapahtumatController {
 
@@ -65,18 +65,17 @@ public class TapahtumatController {
     @FXML
     private DatePicker loppuPvmPicker;
 
-    private final ObservableList<Tapahtuma> tapahtumat =
-            FXCollections.observableArrayList();
+    private KategoriaKokoelma kategoriaKokoelma = new KategoriaKokoelma();
+    private TapahtumaKokoelma tapahtumaKokoelma = new TapahtumaKokoelma();
 
     @FXML
     public void initialize() {
 
-        Kategoria palkka = new Kategoria("Palkka", false);
-        Kategoria ruoka = new Kategoria("Ruoka", true);
-        Kategoria harrastus = new Kategoria("Harrastus", false);
+        kategoriaKokoelma.lataa();
+        tapahtumaKokoelma.lataa();
 
-        lisaysKategoriaCombo.getItems().addAll(palkka, ruoka, harrastus);
-        kategoriaCombo.getItems().addAll(palkka, ruoka, harrastus);
+        lisaysKategoriaCombo.setItems(kategoriaKokoelma.getKategoriat());
+        kategoriaCombo.setItems(kategoriaKokoelma.getKategoriat());
 
         pvmPicker.setValue(LocalDate.now());
 
@@ -92,11 +91,17 @@ public class TapahtumatController {
                 new SimpleStringProperty(cellData.getValue().getPaivamaara().toString())
         );
 
-        kategoriaColumn.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getKategoria().getNimi())
-        );
+        kategoriaColumn.setCellValueFactory(cellData -> {
+            Kategoria kategoria = cellData.getValue().getKategoria();
 
-        tapahtumaTable.setItems(tapahtumat);
+            if (kategoria == null) {
+                return new SimpleStringProperty("-");
+            }
+
+            return new SimpleStringProperty(kategoria.getNimi());
+        });
+
+        tapahtumaTable.setItems(tapahtumaKokoelma.getTapahtumat());
 
         paivitaSaldo();
     }
@@ -157,7 +162,7 @@ public class TapahtumatController {
 
         Tapahtuma uusi = new Tapahtuma(nimi, summa, paivamaara, kategoria);
 
-        tapahtumat.add(uusi);
+        tapahtumaKokoelma.lisaaTapahtuma(uusi);
         paivitaSaldo();
 
         nimiText.clear();
@@ -178,14 +183,23 @@ public class TapahtumatController {
         Tapahtuma valittu = tapahtumaTable.getSelectionModel().getSelectedItem();
 
         if (valittu == null) {
-            IO.println("Valitse ensin poistettava tapahtuma");
+            IO.println("Valitse poistettava tapahtuma");
             return;
         }
 
-        tapahtumat.remove(valittu);
-        paivitaSaldo();
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Poista tapahtuma");
+        alert.setHeaderText("Haluatko varmasti poistaa tapahtuman?");
+        alert.setContentText("Tapahtuma: " + valittu.getNimi());
 
-        IO.println("Poistettiin tapahtuma: " + valittu.getNimi());
+        Optional<ButtonType> vastaus = alert.showAndWait();
+
+        if (vastaus.isPresent() && vastaus.get() == ButtonType.OK) {
+            tapahtumaKokoelma.poistaTapahtuma(valittu);
+            paivitaSaldo();
+
+            IO.println("Poistettiin tapahtuma: " + valittu.getNimi());
+        }
     }
 
     @FXML
@@ -209,7 +223,7 @@ public class TapahtumatController {
         double tulot = 0;
         double menot = 0;
 
-        for (Tapahtuma tapahtuma : tapahtumat) {
+        for (Tapahtuma tapahtuma : tapahtumaKokoelma.getTapahtumat()) {
             if (tapahtuma.onTulo()) {
                 tulot += tapahtuma.getSumma();
             } else if (tapahtuma.onMeno()) {

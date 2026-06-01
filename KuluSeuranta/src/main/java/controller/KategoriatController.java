@@ -1,19 +1,20 @@
 package controller;
 
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import model.Kategoria;
+import model.KategoriaKokoelma;
+import model.Tapahtuma;
+import model.TapahtumaKokoelma;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public class KategoriatController {
 
@@ -29,8 +30,9 @@ public class KategoriatController {
     @FXML
     private TableColumn<Kategoria, String> kategoriaColumn;
 
-    private final ObservableList<Kategoria> kategoriat =
-            FXCollections.observableArrayList();
+    private KategoriaKokoelma kategoriaKokoelma = new KategoriaKokoelma();
+    private TapahtumaKokoelma tapahtumaKokoelma = new TapahtumaKokoelma();
+
 
     @FXML
     public void initialize() {
@@ -47,7 +49,11 @@ public class KategoriatController {
             return new SimpleStringProperty(teksti);
         });
 
-        kategoriaTable.setItems(kategoriat);
+        kategoriaKokoelma.lataa();
+        tapahtumaKokoelma.lataa();
+
+        kategoriaTable.setItems(kategoriaKokoelma.getKategoriat());
+
 
         kategoriaTable.getSelectionModel().selectedItemProperty().addListener(
                 (observable, vanha, valittu) -> {
@@ -72,9 +78,7 @@ public class KategoriatController {
 
         boolean valttamaton = valttamatonCheck.isSelected();
 
-        Kategoria uusi = new Kategoria(nimi, valttamaton);
-
-        kategoriat.add(uusi);
+        kategoriaKokoelma.lisaaKategoria(nimi, valttamaton);
 
         kategoriaText.clear();
         valttamatonCheck.setSelected(false);
@@ -103,6 +107,7 @@ public class KategoriatController {
         valittu.setValttamaton(valttamatonCheck.isSelected());
 
         kategoriaTable.refresh();
+        kategoriaKokoelma.tallenna();
 
         IO.println("Kategoria muokattu");
     }
@@ -116,9 +121,29 @@ public class KategoriatController {
             return;
         }
 
-        kategoriat.remove(valittu);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Poista kategoria");
+        alert.setHeaderText("Haluatko varmasti poistaa kategorian?");
+        alert.setContentText("Kategoria: " + valittu.getNimi());
 
-        IO.println("Poistettiin kategoria: " + valittu.getNimi());
+        Optional<ButtonType> vastaus = alert.showAndWait();
+
+        if (vastaus.isPresent() && vastaus.get() == ButtonType.OK) {
+            for (Tapahtuma tapahtuma : tapahtumaKokoelma.getTapahtumat()) {
+                if (tapahtuma.getKategoria() != null &&
+                        tapahtuma.getKategoria().getNimi().equals(valittu.getNimi())) {
+                    tapahtuma.setKategoria(null);
+                }
+            }
+
+            tapahtumaKokoelma.tallenna();
+            kategoriaKokoelma.poistaKategoria(valittu);
+
+            kategoriaText.clear();
+            valttamatonCheck.setSelected(false);
+
+            IO.println("Poistettiin kategoria: " + valittu.getNimi());
+        }
     }
 
     @FXML

@@ -8,6 +8,9 @@ public class Tapahtuma {
     private LocalDate paivamaara;
     private Kategoria kategoria;
 
+
+    public Tapahtuma() {}
+
     public Tapahtuma(String nimi, double summa, LocalDate paivamaara, Kategoria kategoria) {
         this.nimi = nimi;
         this.summa = summa;
