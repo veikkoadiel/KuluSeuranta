@@ -33,7 +33,6 @@ public class KategoriatController {
     private KategoriaKokoelma kategoriaKokoelma = new KategoriaKokoelma();
     private TapahtumaKokoelma tapahtumaKokoelma = new TapahtumaKokoelma();
 
-
     @FXML
     public void initialize() {
 
@@ -53,7 +52,6 @@ public class KategoriatController {
         tapahtumaKokoelma.lataa();
 
         kategoriaTable.setItems(kategoriaKokoelma.getKategoriat());
-
 
         kategoriaTable.getSelectionModel().selectedItemProperty().addListener(
                 (observable, vanha, valittu) -> {
@@ -96,6 +94,7 @@ public class KategoriatController {
             return;
         }
 
+        String vanhaNimi = valittu.getNimi();
         String uusiNimi = kategoriaText.getText();
 
         if (uusiNimi == null || uusiNimi.isBlank()) {
@@ -103,11 +102,26 @@ public class KategoriatController {
             return;
         }
 
+        uusiNimi = uusiNimi.trim();
+        boolean uusiValttamaton = valttamatonCheck.isSelected();
+
         valittu.setNimi(uusiNimi);
-        valittu.setValttamaton(valttamatonCheck.isSelected());
+        valittu.setValttamaton(uusiValttamaton);
+
+        for (Tapahtuma tapahtuma : tapahtumaKokoelma.getTapahtumat()) {
+            Kategoria tapahtumanKategoria = tapahtuma.getKategoria();
+
+            if (tapahtumanKategoria != null &&
+                    tapahtumanKategoria.getNimi().equals(vanhaNimi)) {
+
+                tapahtumanKategoria.setNimi(uusiNimi);
+                tapahtumanKategoria.setValttamaton(uusiValttamaton);
+            }
+        }
 
         kategoriaTable.refresh();
         kategoriaKokoelma.tallenna();
+        tapahtumaKokoelma.tallenna();
 
         IO.println("Kategoria muokattu");
     }

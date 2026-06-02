@@ -101,8 +101,9 @@
                   <Label text="Loppu:" />
                   <DatePicker fx:id="loppuPvmPicker" />
                   <Label text="Kategoria:" />
-                  <ComboBox fx:id="kategoriaCombo" prefWidth="150.0" promptText="Kaikki" />
-                  <Button fx:id="haeBtn" mnemonicParsing="false" onAction="#handleHae" prefWidth="100.0" text="Hae" />
+                  <ComboBox fx:id="kategoriaCombo" prefWidth="120.0" promptText="Kaikki" />
+                  <Button fx:id="haeBtn" mnemonicParsing="false" onAction="#handleHae" prefWidth="80.0" text="Hae" />
+                  <Button fx:id="tyhjennaBtn" mnemonicParsing="false" onAction="#handleTyhjenna" prefWidth="80.0" text="Tyhjennä" />
                </children>
             </HBox>
          </children>

@@ -1,6 +1,8 @@
 package controller;
 
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -103,6 +105,27 @@ public class TapahtumatController {
 
         tapahtumaTable.setItems(tapahtumaKokoelma.getTapahtumat());
 
+        tapahtumaTable.getSelectionModel().selectedItemProperty().addListener(
+            (observable, vanha, valittu) -> {
+                if (valittu != null) {
+                    nimiText.setText(valittu.getNimi());
+                    summaText.setText(String.valueOf(Math.abs(valittu.getSumma())));
+                    pvmPicker.setValue(valittu.getPaivamaara());
+
+                    if (valittu.getKategoria() != null) {
+                        for (Kategoria kategoria : kategoriaKokoelma.getKategoriat()) {
+                            if (kategoria.getNimi().equals(valittu.getKategoria().getNimi())) {
+                                lisaysKategoriaCombo.setValue(kategoria);
+                                break;
+                            }
+                        }
+                    } else {
+                        lisaysKategoriaCombo.setValue(null);
+                    }
+                }
+            }
+        );
+
         paivitaSaldo();
     }
 
@@ -112,9 +135,7 @@ public class TapahtumatController {
     }
 
     @FXML
-    public void handleLisaaMeno() {
-        lisaaTapahtuma(false);
-    }
+    public void handleLisaaMeno() { lisaaTapahtuma(false); }
 
     private void lisaaTapahtuma(boolean onTulo) {
 
@@ -175,7 +196,64 @@ public class TapahtumatController {
 
     @FXML
     public void handleMuokkaa() {
-        IO.println("Muokataan...");
+
+        Tapahtuma valittu = tapahtumaTable.getSelectionModel().getSelectedItem();
+
+        if (valittu == null) {
+            IO.println("Valitse muokattava tapahtuma");
+            return;
+        }
+
+        String nimi = nimiText.getText();
+        String summaTeksti = summaText.getText();
+        LocalDate paivamaara = pvmPicker.getValue();
+        Kategoria kategoria = lisaysKategoriaCombo.getValue();
+
+        if (nimi == null || nimi.isBlank()) {
+            IO.println("Nimi puuttuu");
+            return;
+        }
+
+        if (summaTeksti == null || summaTeksti.isBlank()) {
+            IO.println("Summa puuttuu");
+            return;
+        }
+
+        if (paivamaara == null) {
+            IO.println("Päivämäärä puuttuu");
+            return;
+        }
+
+        if (kategoria == null) {
+            IO.println("Kategoria puuttuu");
+            return;
+        }
+
+        double summa;
+
+        try {
+            summa = Double.parseDouble(summaTeksti.replace(",", "."));
+        } catch (NumberFormatException e) {
+            IO.println("Summa ei ole numero");
+            return;
+        }
+
+        summa = Math.abs(summa);
+
+        if (valittu.onMeno()) {
+            summa = -summa;
+        }
+
+        valittu.setNimi(nimi.trim());
+        valittu.setSumma(summa);
+        valittu.setPaivamaara(paivamaara);
+        valittu.setKategoria(kategoria);
+
+        tapahtumaTable.refresh();
+        tapahtumaKokoelma.tallenna();
+        paivitaSaldo();
+
+        IO.println("Tapahtuma muokattu");
     }
 
     @FXML
@@ -216,7 +294,60 @@ public class TapahtumatController {
 
     @FXML
     public void handleHae() {
-        IO.println("Haetaan...");
+
+        ObservableList<Tapahtuma> tulokset =
+                FXCollections.observableArrayList();
+
+        Kategoria valittuKategoria = kategoriaCombo.getValue();
+        LocalDate alku = alkuPvmPicker.getValue();
+        LocalDate loppu = loppuPvmPicker.getValue();
+
+        for (Tapahtuma tapahtuma : tapahtumaKokoelma.getTapahtumat()) {
+
+            boolean kelpaa = true;
+
+            if (valittuKategoria != null) {
+
+                if (tapahtuma.getKategoria() == null ||
+                        !tapahtuma.getKategoria().getNimi()
+                                .equals(valittuKategoria.getNimi())) {
+
+                    kelpaa = false;
+                }
+            }
+
+            if (alku != null &&
+                    tapahtuma.getPaivamaara().isBefore(alku)) {
+
+                kelpaa = false;
+            }
+
+            if (loppu != null &&
+                    tapahtuma.getPaivamaara().isAfter(loppu)) {
+
+                kelpaa = false;
+            }
+
+            if (kelpaa) {
+                tulokset.add(tapahtuma);
+            }
+        }
+
+        tapahtumaTable.setItems(tulokset);
+
+        IO.println("Hakutuloksia: " + tulokset.size());
+    }
+
+    @FXML
+    public void handleTyhjenna() {
+
+        kategoriaCombo.setValue(null);
+        alkuPvmPicker.setValue(null);
+        loppuPvmPicker.setValue(null);
+
+        tapahtumaTable.setItems(
+                tapahtumaKokoelma.getTapahtumat()
+        );
     }
 
     public void paivitaSaldo() {
