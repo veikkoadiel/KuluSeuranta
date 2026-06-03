@@ -64,15 +64,41 @@ public class KategoriatController {
         );
     }
 
+    private boolean validoiKategoria(String nimi, Kategoria ohitettava) {
+
+        if (nimi == null || nimi.isBlank()) {
+            IO.println("Kategorian nimi puuttuu");
+            return false;
+        }
+
+        nimi = nimi.trim();
+
+        if (nimi.length() > 30) {
+            IO.println("Kategorian nimi on liian pitkä");
+            return false;
+        }
+
+        for (Kategoria kategoria : kategoriaKokoelma.getKategoriat()) {
+            if (kategoria != ohitettava &&
+                    kategoria.getNimi().equalsIgnoreCase(nimi)) {
+                IO.println("Samanniminen kategoria on jo olemassa");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     @FXML
     public void handleLisaaKategoria(ActionEvent event) {
 
         String nimi = kategoriaText.getText();
 
-        if (nimi == null || nimi.isBlank()) {
-            IO.println("Kategorian nimi puuttuu");
+        if (!validoiKategoria(nimi, null)) {
             return;
         }
+
+        nimi = nimi.trim();
 
         boolean valttamaton = valttamatonCheck.isSelected();
 
@@ -95,14 +121,15 @@ public class KategoriatController {
         }
 
         String vanhaNimi = valittu.getNimi();
+
         String uusiNimi = kategoriaText.getText();
 
-        if (uusiNimi == null || uusiNimi.isBlank()) {
-            IO.println("Nimi puuttuu");
+        if (!validoiKategoria(uusiNimi, valittu)) {
             return;
         }
 
         uusiNimi = uusiNimi.trim();
+
         boolean uusiValttamaton = valttamatonCheck.isSelected();
 
         valittu.setNimi(uusiNimi);

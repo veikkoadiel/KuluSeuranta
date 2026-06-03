@@ -137,31 +137,42 @@ public class TapahtumatController {
     @FXML
     public void handleLisaaMeno() { lisaaTapahtuma(false); }
 
-    private void lisaaTapahtuma(boolean onTulo) {
-
-        String nimi = nimiText.getText();
-        String summaTeksti = summaText.getText();
-        LocalDate paivamaara = pvmPicker.getValue();
-        Kategoria kategoria = lisaysKategoriaCombo.getValue();
+    private Double validoiTapahtuma(
+            String nimi,
+            String summaTeksti,
+            LocalDate paivamaara,
+            Kategoria kategoria) {
 
         if (nimi == null || nimi.isBlank()) {
             IO.println("Nimi puuttuu");
-            return;
+            return null;
         }
 
-        if (summaTeksti == null || summaTeksti.isBlank()) {
-            IO.println("Summa puuttuu");
-            return;
+        nimi = nimi.trim();
+
+        if (nimi.length() > 50) {
+            IO.println("Nimi on liian pitkä");
+            return null;
         }
 
         if (paivamaara == null) {
             IO.println("Päivämäärä puuttuu");
-            return;
+            return null;
+        }
+
+        if (paivamaara.isAfter(LocalDate.now().plusYears(1))) {
+            IO.println("Päivämäärä on liian pitkällä");
+            return null;
         }
 
         if (kategoria == null) {
             IO.println("Kategoria puuttuu");
-            return;
+            return null;
+        }
+
+        if (summaTeksti == null || summaTeksti.isBlank()) {
+            IO.println("Summa puuttuu");
+            return null;
         }
 
         double summa;
@@ -169,13 +180,36 @@ public class TapahtumatController {
         try {
             summa = Double.parseDouble(summaTeksti.replace(",", "."));
         } catch (NumberFormatException e) {
-            IO.println("Summa ei ole numero");
+            IO.println("Summa ei ole kelvollinen numero");
+            return null;
+        }
+
+        if (summa <= 0) {
+            IO.println("Summan täytyy olla suurempi kuin nolla");
+            return null;
+        }
+
+        return summa;
+    }
+
+    private void lisaaTapahtuma(boolean onTulo) {
+
+        String nimi = nimiText.getText();
+        String summaTeksti = summaText.getText();
+        LocalDate paivamaara = pvmPicker.getValue();
+        Kategoria kategoria = lisaysKategoriaCombo.getValue();
+
+
+        Double luettuSumma =
+                validoiTapahtuma(nimi, summaTeksti, paivamaara, kategoria);
+
+        if (luettuSumma == null) {
             return;
         }
 
-        if (summa < 0) {
-            summa = Math.abs(summa);
-        }
+        nimi = nimi.trim();
+
+        double summa = luettuSumma;
 
         if (!onTulo) {
             summa = -summa;
@@ -209,42 +243,23 @@ public class TapahtumatController {
         LocalDate paivamaara = pvmPicker.getValue();
         Kategoria kategoria = lisaysKategoriaCombo.getValue();
 
-        if (nimi == null || nimi.isBlank()) {
-            IO.println("Nimi puuttuu");
+
+        Double luettuSumma =
+                validoiTapahtuma(nimi, summaTeksti, paivamaara, kategoria);
+
+        if (luettuSumma == null) {
             return;
         }
 
-        if (summaTeksti == null || summaTeksti.isBlank()) {
-            IO.println("Summa puuttuu");
-            return;
-        }
+        nimi = nimi.trim();
 
-        if (paivamaara == null) {
-            IO.println("Päivämäärä puuttuu");
-            return;
-        }
-
-        if (kategoria == null) {
-            IO.println("Kategoria puuttuu");
-            return;
-        }
-
-        double summa;
-
-        try {
-            summa = Double.parseDouble(summaTeksti.replace(",", "."));
-        } catch (NumberFormatException e) {
-            IO.println("Summa ei ole numero");
-            return;
-        }
-
-        summa = Math.abs(summa);
+        double summa = luettuSumma;
 
         if (valittu.onMeno()) {
             summa = -summa;
         }
 
-        valittu.setNimi(nimi.trim());
+        valittu.setNimi(nimi);
         valittu.setSumma(summa);
         valittu.setPaivamaara(paivamaara);
         valittu.setKategoria(kategoria);
@@ -301,6 +316,11 @@ public class TapahtumatController {
         Kategoria valittuKategoria = kategoriaCombo.getValue();
         LocalDate alku = alkuPvmPicker.getValue();
         LocalDate loppu = loppuPvmPicker.getValue();
+
+        if (alku != null && loppu != null && alku.isAfter(loppu)) {
+            IO.println("Alkupäivämäärä ei voi olla loppupäivämäärän jälkeen");
+            return;
+        }
 
         for (Tapahtuma tapahtuma : tapahtumaKokoelma.getTapahtumat()) {
 
